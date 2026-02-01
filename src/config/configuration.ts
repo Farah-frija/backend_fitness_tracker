@@ -49,7 +49,7 @@ export const AppDataSource = new DataSource({
   password: 'farah',
   database: 'fitness_tracker',
   entities: [__dirname + '/../modules/**/entities/*.entity{.ts,.js}'],
-  synchronize: true, // si sans migrations
+  synchronize: false, //we use migrations
   driver: require('pg'),
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
 });

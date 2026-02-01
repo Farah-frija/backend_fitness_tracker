@@ -1,8 +1,10 @@
 import { Entity, Column, TableInheritance, OneToMany } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { BaseEntity } from '../../../common/entities/base.entity';
-import { UserRole } from '../../../common/enums/roles.enum';
 
+import {Post} from '../../forum/entities/post.entity'
+import {Comment} from '../../forum/entities/commentaire.entity'
+import { Reaction } from '../../forum/entities/reaction.entity';
 @Entity('utilisateur')
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
 export class Utilisateur extends BaseEntity {
@@ -19,11 +21,8 @@ export class Utilisateur extends BaseEntity {
   @Exclude()
   motDePasse: string;
 
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-  })
-  role: UserRole;
+  @OneToMany(() => Post, (post) => post.author)
+  posts: Post[];
 
   @Column({ nullable: true })
   telephone: string;
@@ -56,4 +55,9 @@ export class Utilisateur extends BaseEntity {
 
   @Column({ default: true })
   isActive: boolean;
+  @OneToMany(() => Reaction, (reaction) => reaction.user)
+reactions: Reaction[];
+
+  @OneToMany(() => Comment, (comment) => comment.author)
+comments: Comment[];
 }
