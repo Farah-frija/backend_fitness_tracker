@@ -6,6 +6,7 @@ import { AnimalModule } from './modules/animal/animal.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import {
   AppDataSource,
   databaseConfig,
@@ -28,6 +29,7 @@ import {
     UtilisateurModule,
     AnimalModule,
     AuthModule,
+    DashboardModule,
     
   ],
   controllers: [AppController],

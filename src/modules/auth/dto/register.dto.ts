@@ -27,7 +27,7 @@ export class RegisterDto {
   @IsString()
   @MinLength(6)
   @ApiProperty()
-  motDePasse: string;
+  password: string;
 
   @IsString()
   @ApiProperty()

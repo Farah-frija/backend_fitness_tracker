@@ -47,7 +47,7 @@ export class UtilisateurService extends GenericService<Utilisateur> {
 
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(
-        createUserDto.motDePasse,
+        createUserDto.password || createUserDto['motDePasse'],
         saltRounds,
       );
 

@@ -1,0 +1,277 @@
+{
+  "info": {
+    "name": "Dashboard & Analytics API",
+    "description": "Complete test collection for FitTracker Dashboard endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set('authToken', jsonData.access_token);",
+                  "    pm.test('Token saved to environment', function() {",
+                  "        pm.expect(pm.environment.get('authToken')).to.not.be.undefined;",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "1. Get Dashboard Stats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has all required fields', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('totalWorkouts');",
+                  "    pm.expect(jsonData).to.have.property('totalCalories');",
+                  "    pm.expect(jsonData).to.have.property('totalDistance');",
+                  "    pm.expect(jsonData).to.have.property('totalDuration');",
+                  "    pm.expect(jsonData).to.have.property('weeklyGoalProgress');",
+                  "    pm.expect(jsonData).to.have.property('monthlyGoalProgress');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "stats"]
+            }
+          }
+        },
+        {
+          "name": "2. Get Weekly Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Each item has required fields', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('date');",
+                  "        pm.expect(jsonData[0]).to.have.property('workouts');",
+                  "        pm.expect(jsonData[0]).to.have.property('calories');",
+                  "        pm.expect(jsonData[0]).to.have.property('duration');",
+                  "        pm.expect(jsonData[0]).to.have.property('distance');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/weekly",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "weekly"]
+            }
+          }
+        },
+        {
+          "name": "3. Get Monthly Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function() {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/monthly",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "monthly"]
+            }
+          }
+        },
+        {
+          "name": "4. Get Activity Breakdown",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Each activity has type, count, percentage, color', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('type');",
+                  "        pm.expect(jsonData[0]).to.have.property('count');",
+                  "        pm.expect(jsonData[0]).to.have.property('percentage');",
+                  "        pm.expect(jsonData[0]).to.have.property('color');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/activity-breakdown",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "activity-breakdown"]
+            }
+          }
+        },
+        {
+          "name": "5. Get Weekly Summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has summary fields', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('totalWorkouts');",
+                  "    pm.expect(jsonData).to.have.property('mostActiveDay');",
+                  "    pm.expect(jsonData).to.have.property('averageCaloriesPerDay');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/summary/weekly",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "summary", "weekly"]
+            }
+          }
+        },
+        {
+          "name": "6. Get Monthly Summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has summary fields', function() {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('totalWorkouts');",
+                  "    pm.expect(jsonData).to.have.property('topActivity');",
+                  "    pm.expect(jsonData).to.have.property('averageWorkoutsPerWeek');",
+                  "    pm.expect(jsonData).to.have.property('averageCaloriesPerDay');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/summary/monthly",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "summary", "monthly"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

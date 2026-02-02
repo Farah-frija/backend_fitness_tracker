@@ -17,11 +17,10 @@ export class Veterinaire extends Utilisateur {
     this.role = UserRole.VETERINARIAN;
   }
 
-  @Column({ unique: true })
-  @Column()
+  @Column({ unique: true, nullable: true })
   numLicence: string;
 
-  @Column()
+  @Column({ nullable: true })
   specialites: string;
 
 

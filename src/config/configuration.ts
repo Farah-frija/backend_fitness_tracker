@@ -11,8 +11,8 @@ export const databaseConfig = registerAs('database', () => ({
   host: 'localhost',
   port: Number('5432'),
   username: 'postgres',
-  password: 'farah',
-  database: 'fitness_tracker',
+  password: 'aya123',
+  database: 'Fittracker',
 }));
 
 // JWT configuration
@@ -46,10 +46,10 @@ export const AppDataSource = new DataSource({
   host: 'localhost',
   port: 5432,
   username: 'postgres',
-  password: 'farah',
-  database: 'fitness_tracker',
-  entities: [__dirname + '/../modules/**/entities/*.entity{.ts,.js}'],
-  synchronize: true, // si sans migrations
+  password: 'aya123',
+  database: 'Fittracker',
+  entities: [__dirname + '/../modules/**/entities/*{.ts,.js}'],
+  synchronize: false, // disabled - using manual migrations
   driver: require('pg'),
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
 });
