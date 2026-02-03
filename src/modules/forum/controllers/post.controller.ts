@@ -60,7 +60,7 @@ export class PostController {
     return this.postService.create(createPostDto);
   }
 
-  @Get()
+  @Get('/:userId')
   @ApiOperation({ 
     summary: 'Récupérer tous les posts',
     description: 'Retourne la liste de tous les posts'
@@ -81,14 +81,13 @@ export class PostController {
     type: Number,
     description: 'Numéro de page pour la pagination'
   })
-  findAll(
-    @Query('limit') limit?: number,
-    @Query('page') page?: number
-  ) {
-    return this.postService.findAll();
-  }
+@Get()
+findAll(@Param('userId') userId: number) {
+  return this.postService.findAll(Number(userId));
+}
 
-  @Get(':id')
+
+  @Get(':id/:userId')
   @ApiOperation({ 
     summary: 'Récupérer un post par ID',
     description: 'Retourne les détails d\'un post spécifique'
@@ -105,9 +104,12 @@ export class PostController {
   @ApiNotFoundResponse({ 
     description: 'Post non trouvé' 
   })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.postService.findOne(id);
-  }
+findOne(
+  @Param('id', ParseIntPipe) id: number,
+  @Param('userId', ParseIntPipe) userId: number,
+) {
+  return this.postService.findOne(id, userId);
+}
 
   @Get('user/:userId')
   @ApiOperation({ 
@@ -166,32 +168,4 @@ export class PostController {
     return this.postService.findByTag(tag);
   }
 
-  @Get('search/:keyword')
-  @ApiOperation({ 
-    summary: 'Rechercher des posts',
-    description: 'Recherche des posts par mot-clé dans le titre ou le contenu'
-  })
-  @ApiParam({
-    name: 'keyword',
-    description: 'Mot-clé à rechercher',
-    type: String
-  })
-  @ApiOkResponse({ 
-    description: 'Résultats de la recherche',
-    type: [PostEntity] 
-  })
-  @ApiQuery({
-    name: 'inTitle',
-    required: false,
-    type: Boolean,
-    description: 'Rechercher uniquement dans les titres'
-  })
-  searchByKeyword(
-    @Param('keyword') keyword: string,
-    @Query('inTitle') inTitle?: boolean
-  ) {
-    // Vous pouvez ajouter cette méthode dans votre service si besoin
-    // return this.postService.searchByKeyword(keyword, inTitle);
-    return this.postService.findAll(); // Temporaire
-  }
 }
