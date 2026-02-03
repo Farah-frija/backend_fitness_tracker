@@ -13,6 +13,7 @@ import {
 
 } from './config/configuration';
 import { ForumModule } from './modules/forum/forum.module';
+import { BodyMetricsModule } from './modules/metrics/body-metrics.module';
 import { GoalsModule } from './modules/goals/goals.module';
 
 
@@ -30,6 +31,8 @@ import { GoalsModule } from './modules/goals/goals.module';
       }),
     }),
     UtilisateurModule,
+    BodyMetricsModule,
+   
    GoalsModule,
     ForumModule,
         ScheduleModule.forRoot(),
