@@ -6,6 +6,7 @@ import { Post } from '../../forum/entities/post.entity'
 import { Comment } from '../../forum/entities/commentaire.entity'
 import { Reaction } from '../../forum/entities/reaction.entity';
 import { BodyMetrics } from '../../metrics/entities/body-metrics.entity';
+import { Goal } from '../../goals/entities/goal.entity';
 
 @Entity('utilisateur')
 @TableInheritance({ column: { type: 'varchar', name: 'type', default: 'Utilisateur' } })
@@ -67,5 +68,9 @@ export class Utilisateur extends BaseEntity {
   reactions: Reaction[];
 
   @OneToMany(() => Comment, (comment) => comment.author)
-  comments: Comment[];
+comments: Comment[];
+
+@OneToMany(() => Goal, (goal) => goal.user)
+goals: Goal[];
+
 }
