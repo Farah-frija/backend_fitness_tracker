@@ -10,6 +10,7 @@ import { Post } from '../entities/post.entity';
 import { CreatePostDto } from '../dtos/createPostDto';
 import { Utilisateur } from '../../utilisateur/entities/utilisateur.entity';
 import { CategoriesType } from '../../../common/enums/category.enum';
+import { PostWithReactionsDto } from '../dtos/postResponseDto';
 
 @Injectable()
 export class PostService {
@@ -53,25 +54,121 @@ export class PostService {
   }
 
   // Méthodes supplémentaires (optionnelles)
-  async findAll(): Promise<Post[]> {
-    return this.postRepository.find({
-      relations: ['author'],
-      order: { createdAt: 'DESC' },
-    });
+async findAll(userId: number): Promise<PostWithReactionsDto[]> {
+  const posts = await this.postRepository
+    .createQueryBuilder('post')
+    .leftJoinAndSelect('post.author', 'author')
+
+    // COUNTS
+    .addSelect(
+      `COUNT(CASE WHEN reaction.type = 'LIKE' THEN 1 END)`,
+      'likes',
+    )
+    .addSelect(
+      `COUNT(CASE WHEN reaction.type = 'SHARE' THEN 1 END)`,
+      'shares',
+    )
+    .addSelect(
+      `COUNT(CASE WHEN reaction.type = 'PIN' THEN 1 END)`,
+      'pins',
+    )
+
+    // BOOLS (user specific)
+    .addSelect(
+      `MAX(CASE WHEN reaction.type = 'LIKE' AND reaction.userId = :userId THEN 1 ELSE 0 END)`,
+      'isLiked',
+    )
+    .addSelect(
+      `MAX(CASE WHEN reaction.type = 'SHARE' AND reaction.userId = :userId THEN 1 ELSE 0 END)`,
+      'isShared',
+    )
+    .addSelect(
+      `MAX(CASE WHEN reaction.type = 'PIN' AND reaction.userId = :userId THEN 1 ELSE 0 END)`,
+      'isPinned',
+    )
+
+    .leftJoin('post.reactions', 'reaction')
+    .groupBy('post.id')
+    .addGroupBy('author.id')
+    .orderBy('post.createdAt', 'DESC')
+    .setParameter('userId', userId)
+    .getRawAndEntities();
+
+  // 🔄 Merge raw + entities
+  return posts.entities.map((post, index) => ({
+    ...post,
+    likes: Number(posts.raw[index].likes),
+    shares: Number(posts.raw[index].shares),
+    pins: Number(posts.raw[index].pins),
+    isLiked: Boolean(posts.raw[index].isLiked),
+    isShared: Boolean(posts.raw[index].isShared),
+    isPinned: Boolean(posts.raw[index].isPinned),
+  }));
+}
+
+
+async findOne(
+  id: number,
+  userId: number,
+): Promise<PostWithReactionsDto> {
+  const result = await this.postRepository
+    .createQueryBuilder('post')
+    .leftJoinAndSelect('post.author', 'author')
+    .leftJoin('post.reactions', 'reaction')
+
+    // counts
+    .addSelect(
+      `COUNT(CASE WHEN reaction.type = 'LIKE' THEN 1 END)`,
+      'likes',
+    )
+    .addSelect(
+      `COUNT(CASE WHEN reaction.type = 'SHARE' THEN 1 END)`,
+      'shares',
+    )
+    .addSelect(
+      `COUNT(CASE WHEN reaction.type = 'PIN' THEN 1 END)`,
+      'pins',
+    )
+
+    // user booleans
+    .addSelect(
+      `MAX(CASE WHEN reaction.type = 'LIKE' AND reaction.userId = :userId THEN 1 ELSE 0 END)`,
+      'isLiked',
+    )
+    .addSelect(
+      `MAX(CASE WHEN reaction.type = 'SHARE' AND reaction.userId = :userId THEN 1 ELSE 0 END)`,
+      'isShared',
+    )
+    .addSelect(
+      `MAX(CASE WHEN reaction.type = 'PIN' AND reaction.userId = :userId THEN 1 ELSE 0 END)`,
+      'isPinned',
+    )
+
+    .where('post.id = :id', { id })
+    .andWhere('post.deletedAt IS NULL')
+    .groupBy('post.id')
+    .addGroupBy('author.id')
+    .setParameter('userId', userId)
+    .getRawAndEntities();
+
+  if (!result.entities.length) {
+    throw new NotFoundException(`Post avec ID ${id} non trouvé`);
   }
 
-  async findOne(id: number): Promise<Post> {
-    const post = await this.postRepository.findOne({
-      where: { id, deletedAt: null } as any,
-      relations: ['author'],
-    });
+  // ✅ Post intact + champs ajoutés
+  const post = result.entities[0] as PostWithReactionsDto;
 
-    if (!post) {
-      throw new NotFoundException(`Post avec ID ${id} non trouvé`);
-    }
+  post.likes = Number(result.raw[0].likes);
+  post.shares = Number(result.raw[0].shares);
+  post.pins = Number(result.raw[0].pins);
 
-    return post;
-  }
+  post.isLiked = Boolean(result.raw[0].isLiked);
+  post.isShared = Boolean(result.raw[0].isShared);
+  post.isPinned = Boolean(result.raw[0].isPinned);
+
+  return post;
+}
+
 
   async findByUser(userId: number): Promise<Post[]> {
     const utilisateur = await this.utilisateurRepository.findOne({
