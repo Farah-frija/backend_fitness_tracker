@@ -48,6 +48,8 @@ async create(user: Utilisateur, dto: CreateGoalDto) {
     return this.goalRepository.find({
       where: { user: { id: userId } },
       order: { createdAt: 'DESC' },
+            relations: ['user', 'schedule'],
+
     });
   }
 
@@ -68,22 +70,39 @@ async create(user: Utilisateur, dto: CreateGoalDto) {
     return this.goalRepository.save(goal);
   }
 
-  async remove(goalId: number, userId: number): Promise<void> {
-    const goal = await this.goalRepository.findOne({
-      where: { id: goalId },
-      relations: ['user', 'schedule'],
-    });
 
-    if (!goal) throw new NotFoundException('Goal not found');
-    if (goal.user.id !== userId) throw new ForbiddenException();
+async remove(goalId: number, userId: number): Promise<void> {
+  const goal = await this.goalRepository.findOne({
+    where: { id: goalId },
+    relations: ['user'],
+  });
 
-    await this.goalRepository.remove(goal);
-  }
+  if (!goal) throw new NotFoundException('Goal not found');
+  if (goal.user.id !== userId) throw new ForbiddenException();
+
+  // 1️⃣ Soft delete the goal (uses deletedAt)
+  await this.goalRepository.softDelete(goal.id);
+
+  // 2️⃣ Deactivate today + future instances
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  await this.instanceRepo.update(
+    {
+      goal: { id: goal.id },
+      date: MoreThanOrEqual(today),
+    },
+    {
+      isGoalActive: false,
+    },
+  );
+}
+
 
 async toggleActive(goalId: number, userId: number): Promise<Goal> {
   const goal = await this.goalRepository.findOne({
     where: { id: goalId },
-      relations: ['user', 'schedule'],
+    relations: ['user', 'schedule'],
   });
 
   if (!goal) throw new NotFoundException('Goal not found');
@@ -91,30 +110,34 @@ async toggleActive(goalId: number, userId: number): Promise<Goal> {
 
   // Toggle state
   goal.isActive = !goal.isActive;
-  const savedGoal = await this.goalRepository.save(goal);
+  await this.goalRepository.save(goal);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // 🔑 Update today + future instances
+  // Update today + future instances
   await this.instanceRepo.update(
     {
       goal: { id: goal.id },
       date: MoreThanOrEqual(today),
     },
     {
-      isGoalActive: savedGoal.isActive,
+      isGoalActive: goal.isActive,
     },
   );
 
-  // Optional but VERY nice UX:
-  // If goal is re-activated, ensure instances exist
-  if (savedGoal.isActive) {
-    await this.instanceGenerator.generateForGoal(savedGoal);
+  // Ensure instances exist if reactivated
+  if (goal.isActive) {
+    await this.instanceGenerator.generateForGoal(goal);
   }
 
-  return savedGoal;
+  // 🔥 RE-FETCH WITH RELATIONS
+  return this.goalRepository.findOne({
+    where: { id: goal.id },
+    relations: ['user', 'schedule'],
+  });
 }
+
 
 
   

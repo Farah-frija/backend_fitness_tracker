@@ -39,20 +39,10 @@ export class GoalInstanceGeneratorService {
   }
 
   private appliesToDate(goal: Goal, date: Date): boolean {
-    // Defensive: goal.schedule may be null if the relation wasn't loaded.
+    console.log('Checking applicability for date:', date);
+    console.log('Goal schedule:', goal.schedule);
+    console.log(goal);
     const schedule = goal.schedule;
-
-    // If no schedule, treat as one-off only on goal.startDate (if present)
-    if (!schedule) {
-      if (goal.startDate) {
-        const start = new Date(goal.startDate);
-        start.setHours(0, 0, 0, 0);
-        const d = new Date(date);
-        d.setHours(0, 0, 0, 0);
-        return start.getTime() === d.getTime();
-      }
-      return false;
-    }
 
     if (schedule.frequencyType === 'daily') return true;
 
