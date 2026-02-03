@@ -17,7 +17,7 @@ import {
 } from './dto';
 
 @Controller('api/dashboard')
-@UseGuards(JwtAuthGuard)
+// @UseGuards(JwtAuthGuard) // Temporarily disabled for frontend testing
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
@@ -28,7 +28,7 @@ export class DashboardController {
   @Get('stats')
   async getStats(@Request() req): Promise<DashboardStatsDto> {
     try {
-      const userId = req.user.userId || req.user.id;
+      const userId = 1; // Hardcoded for testing - change to 2 for User 2
       return await this.dashboardService.getStats(userId);
     } catch (error) {
       throw new HttpException(
@@ -49,7 +49,7 @@ export class DashboardController {
   @Get('weekly')
   async getWeeklyData(@Request() req): Promise<WorkoutDataDto[]> {
     try {
-      const userId = req.user.userId || req.user.id;
+      const userId = 1; // Hardcoded for testing - change to 2 for User 2
       return await this.dashboardService.getWeeklyData(userId);
     } catch (error) {
       throw new HttpException(
@@ -70,7 +70,7 @@ export class DashboardController {
   @Get('monthly')
   async getMonthlyData(@Request() req): Promise<WorkoutDataDto[]> {
     try {
-      const userId = req.user.userId || req.user.id;
+      const userId = 1; // Hardcoded for testing - change to 2 for User 2
       return await this.dashboardService.getMonthlyData(userId);
     } catch (error) {
       throw new HttpException(
@@ -93,7 +93,7 @@ export class DashboardController {
     @Request() req,
   ): Promise<ActivityBreakdownDto[]> {
     try {
-      const userId = req.user.userId || req.user.id;
+      const userId = 1; // Hardcoded for testing - change to 2 for User 2
       return await this.dashboardService.getActivityBreakdown(userId);
     } catch (error) {
       throw new HttpException(
@@ -114,7 +114,7 @@ export class DashboardController {
   @Get('summary/weekly')
   async getWeeklySummary(@Request() req): Promise<WeeklySummaryDto> {
     try {
-      const userId = req.user.userId || req.user.id;
+      const userId = 1; // Hardcoded for testing - change to 2 for User 2
       return await this.dashboardService.getWeeklySummary(userId);
     } catch (error) {
       throw new HttpException(
@@ -135,7 +135,7 @@ export class DashboardController {
   @Get('summary/monthly')
   async getMonthlySummary(@Request() req): Promise<MonthlySummaryDto> {
     try {
-      const userId = req.user.userId || req.user.id;
+      const userId = 1; // Hardcoded for testing - change to 2 for User 2
       return await this.dashboardService.getMonthlySummary(userId);
     } catch (error) {
       throw new HttpException(

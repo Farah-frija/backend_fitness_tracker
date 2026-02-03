@@ -8,6 +8,9 @@ export class Workout {
   @Column({ name: 'user_id', type: 'int' })
   user_id: number;
 
+  @Column({ name: 'goal_id', type: 'uuid', nullable: true })
+  goal_id: string;
+
   @Column({ name: 'activity_type', length: 50 })
   activity_type: string;
 

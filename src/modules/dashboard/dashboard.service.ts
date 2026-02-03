@@ -28,27 +28,33 @@ export class DashboardService {
     // Overall stats
     const overallStats = await this.workoutRepository
       .createQueryBuilder('workout')
+      .leftJoin('goals', 'goal', 'workout.goal_id = goal.id')
       .select('COUNT(*)', 'totalWorkouts')
       .addSelect('COALESCE(SUM(workout.calories), 0)', 'totalCalories')
       .addSelect('COALESCE(SUM(workout.distance), 0)', 'totalDistance')
       .addSelect('COALESCE(SUM(workout.duration), 0)', 'totalDuration')
       .where('workout.user_id = :userId', { userId })
+      .andWhere('(workout.goal_id IS NULL OR goal.is_active = true)')
       .getRawOne();
 
     // Weekly stats
     const weeklyStats = await this.workoutRepository
       .createQueryBuilder('workout')
+      .leftJoin('goals', 'goal', 'workout.goal_id = goal.id')
       .select('COUNT(*)', 'count')
       .where('workout.user_id = :userId', { userId })
       .andWhere('workout.workout_date >= :weekAgo', { weekAgo })
+      .andWhere('(workout.goal_id IS NULL OR goal.is_active = true)')
       .getRawOne();
 
     // Monthly stats
     const monthlyStats = await this.workoutRepository
       .createQueryBuilder('workout')
+      .leftJoin('goals', 'goal', 'workout.goal_id = goal.id')
       .select('COUNT(*)', 'count')
       .where('workout.user_id = :userId', { userId })
       .andWhere('workout.workout_date >= :monthAgo', { monthAgo })
+      .andWhere('(workout.goal_id IS NULL OR goal.is_active = true)')
       .getRawOne();
 
     // Calculate goal progress (assuming weekly goal is 5 workouts, monthly is 20)
@@ -82,6 +88,7 @@ export class DashboardService {
 
     const data = await this.workoutRepository
       .createQueryBuilder('workout')
+      .leftJoin('goals', 'goal', 'workout.goal_id = goal.id')
       .select('DATE(workout.workout_date)', 'date')
       .addSelect('COUNT(*)', 'workouts')
       .addSelect('COALESCE(SUM(workout.calories), 0)', 'calories')
@@ -89,6 +96,7 @@ export class DashboardService {
       .addSelect('COALESCE(SUM(workout.distance), 0)', 'distance')
       .where('workout.user_id = :userId', { userId })
       .andWhere('workout.workout_date >= :weekAgo', { weekAgo })
+      .andWhere('(workout.goal_id IS NULL OR goal.is_active = true)')
       .groupBy('DATE(workout.workout_date)')
       .orderBy('DATE(workout.workout_date)', 'ASC')
       .getRawMany();
@@ -111,8 +119,9 @@ export class DashboardService {
 
     const data = await this.workoutRepository
       .createQueryBuilder('workout')
+      .leftJoin('goals', 'goal', 'workout.goal_id = goal.id')
       .select(
-        'DATE_TRUNC(\'week\', workout.workout_date)',
+        "DATE_TRUNC('week', workout.workout_date)",
         'weekStart',
       )
       .addSelect('COUNT(*)', 'workouts')
@@ -121,10 +130,11 @@ export class DashboardService {
       .addSelect('COALESCE(SUM(workout.distance), 0)', 'distance')
       .where('workout.user_id = :userId', { userId })
       .andWhere('workout.workout_date >= :monthAgo', { monthAgo })
+      .andWhere('(workout.goal_id IS NULL OR goal.is_active = true)')
       .groupBy(
-        'DATE_TRUNC(\'week\', workout.workout_date)',
+        "DATE_TRUNC('week', workout.workout_date)",
       )
-      .orderBy('weekStart', 'ASC')
+      .orderBy("DATE_TRUNC('week', workout.workout_date)", 'ASC')
       .getRawMany();
 
     return data.map((item) => ({
@@ -150,9 +160,11 @@ export class DashboardService {
 
     const data = await this.workoutRepository
       .createQueryBuilder('workout')
+      .leftJoin('goals', 'goal', 'workout.goal_id = goal.id')
       .select('workout.activity_type', 'type')
       .addSelect('COUNT(*)', 'count')
       .where('workout.user_id = :userId', { userId })
+      .andWhere('(workout.goal_id IS NULL OR goal.is_active = true)')
       .groupBy('workout.activity_type')
       .orderBy('COUNT(*)', 'DESC')
       .getRawMany();
@@ -187,21 +199,25 @@ export class DashboardService {
     // Weekly totals
     const totals = await this.workoutRepository
       .createQueryBuilder('workout')
+      .leftJoin('goals', 'goal', 'workout.goal_id = goal.id')
       .select('COUNT(*)', 'totalWorkouts')
       .addSelect('COALESCE(SUM(workout.calories), 0)', 'totalCalories')
       .addSelect('COALESCE(SUM(workout.distance), 0)', 'totalDistance')
       .addSelect('COALESCE(SUM(workout.duration), 0)', 'totalDuration')
       .where('workout.user_id = :userId', { userId })
       .andWhere('workout.workout_date >= :weekAgo', { weekAgo })
+      .andWhere('(workout.goal_id IS NULL OR goal.is_active = true)')
       .getRawOne();
 
     // Most active day
     const mostActive = await this.workoutRepository
       .createQueryBuilder('workout')
+      .leftJoin('goals', 'goal', 'workout.goal_id = goal.id')
       .select('DATE(workout.workout_date)', 'date')
-      .addSelect('COUNT(*)', 'workouts')
+      .addSelect('COUNT(*)', 'workoutCount')
       .where('workout.user_id = :userId', { userId })
       .andWhere('workout.workout_date >= :weekAgo', { weekAgo })
+      .andWhere('(workout.goal_id IS NULL OR goal.is_active = true)')
       .groupBy('DATE(workout.workout_date)')
       .orderBy('COUNT(*)', 'DESC')
       .limit(1)
@@ -211,17 +227,15 @@ export class DashboardService {
     const averageCaloriesPerDay =
       totalWorkouts > 0 ? Math.round(parseFloat(totals.totalCalories) / 7) : 0;
 
+    const totalDuration = parseFloat(totals.totalDuration) || 0;
+    const avgDuration = totalWorkouts > 0 ? Math.round(totalDuration / totalWorkouts) : 0;
+
     return {
       totalWorkouts,
       totalCalories: parseFloat(totals.totalCalories) || 0,
       totalDistance: parseFloat(totals.totalDistance) || 0,
-      totalDuration: parseFloat(totals.totalDuration) || 0,
-      mostActiveDay: mostActive
-        ? {
-            date: this.formatDate(mostActive.date),
-            workouts: parseInt(mostActive.workouts) || 0,
-          }
-        : { date: '', workouts: 0 },
+      avgDuration, // Average duration per workout
+      mostActiveDay: mostActive ? this.formatDate(mostActive.date) : '',
       averageCaloriesPerDay,
     };
   }
@@ -236,21 +250,25 @@ export class DashboardService {
     // Monthly totals
     const totals = await this.workoutRepository
       .createQueryBuilder('workout')
+      .leftJoin('goals', 'goal', 'workout.goal_id = goal.id')
       .select('COUNT(*)', 'totalWorkouts')
       .addSelect('COALESCE(SUM(workout.calories), 0)', 'totalCalories')
       .addSelect('COALESCE(SUM(workout.distance), 0)', 'totalDistance')
       .addSelect('COALESCE(SUM(workout.duration), 0)', 'totalDuration')
       .where('workout.user_id = :userId', { userId })
       .andWhere('workout.workout_date >= :monthAgo', { monthAgo })
+      .andWhere('(workout.goal_id IS NULL OR goal.is_active = true)')
       .getRawOne();
 
     // Top activity
     const topActivity = await this.workoutRepository
       .createQueryBuilder('workout')
+      .leftJoin('goals', 'goal', 'workout.goal_id = goal.id')
       .select('workout.activity_type', 'type')
       .addSelect('COUNT(*)', 'count')
       .where('workout.user_id = :userId', { userId })
       .andWhere('workout.workout_date >= :monthAgo', { monthAgo })
+      .andWhere('(workout.goal_id IS NULL OR goal.is_active = true)')
       .groupBy('workout.activity_type')
       .orderBy('COUNT(*)', 'DESC')
       .limit(1)
