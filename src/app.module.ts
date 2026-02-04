@@ -3,10 +3,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UtilisateurModule } from './modules/utilisateur/utilisateur.module';
 import { ScheduleModule } from '@nestjs/schedule';
-
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import {
   AppDataSource,
   databaseConfig,
@@ -32,11 +31,10 @@ import { GoalsModule } from './modules/goals/goals.module';
     }),
     UtilisateurModule,
     BodyMetricsModule,
-   
-   GoalsModule,
+    GoalsModule,
     ForumModule,
-        ScheduleModule.forRoot(),
-
+    DashboardModule,
+    ScheduleModule.forRoot(),
     
   ],
   controllers: [AppController],

@@ -5,8 +5,13 @@ import { join } from 'path';
 import * as express from 'express';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
+  // Enable CORS for Angular frontend
   app.enableCors({
-    origin: '*', // Allow any domain
+    origin: ['http://localhost:4200', 'http://localhost:4201', '*'], // Allow Angular dev server
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   });
   app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
   // Swagger setup
